@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agendamento Online | Sistema Base</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>body { font-family: 'Inter', sans-serif; }</style>
+  <script>
+    // Configuração de Cores do Template (Troque 'indigo' pela cor do seu cliente nas classes abaixo)
+    tailwind.config = {
+      theme: { extend: { colors: { primary: '#4f46e5', primaryHover: '#4338ca' } } }
+    }
+  </script>
+</head>
+<body class="bg-gray-50 text-gray-900 min-h-screen flex flex-col justify-between">
+
+  <!-- Topo -->
+  <header class="bg-white border-b border-gray-200 sticky top-0 z-40 shadow-sm">
+    <div class="max-w-3xl mx-auto px-4 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <!-- Logo Espaço -->
+        <div class="w-10 h-10 rounded-lg bg-[color:var(--tw-colors-primary)] flex items-center justify-center text-white font-bold text-xl shadow-md">
+          🏢
+        </div>
+        <div>
+          <h1 class="font-bold text-lg leading-tight text-gray-800">Nome do <span class="text-[color:var(--tw-colors-primary)]">Negócio</span></h1>
+          <p class="text-xs text-gray-500 font-medium">Agendamento Rápido</p>
+        </div>
+      </div>
+      <a href="admin.html" class="text-xs font-medium text-gray-500 hover:text-gray-900 transition flex items-center gap-1">
+        🔒 Restrito
+      </a>
+    </div>
+  </header>
+
+  <!-- Conteúdo Principal -->
+  <main class="max-w-3xl w-full mx-auto px-4 my-8 flex-1">
+    <section class="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm mb-6">
+      <h2 class="text-xl font-bold text-gray-800">Reserve seu horário</h2>
+      <p class="text-gray-500 text-sm mt-1">Preencha os dados abaixo para confirmar sua reserva.</p>
+    </section>
+
+    <form id="bookingForm" onsubmit="handleBooking(event)" class="space-y-6">
+      <!-- 1. Serviços (Gerado via JS para facilitar edição) -->
+      <div class="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
+        <label class="block text-sm font-bold text-gray-700 mb-4">1. Escolha o Serviço</label>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="servicesList"></div>
+      </div>
+
+      <!-- 2. Data e Profissional -->
+      <div class="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-bold text-gray-700 mb-2">2. Profissional</label>
+          <select id="professionalSelect" required class="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--tw-colors-primary)] transition">
+            <option value="Profissional 1">Profissional 1</option>
+            <option value="Profissional 2">Profissional 2</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-bold text-gray-700 mb-2">3. Data</label>
+          <input type="date" id="dateSelect" required class="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--tw-colors-primary)] transition">
+        </div>
+      </div>
+
+      <!-- 4. Horários -->
+      <div class="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
+        <label class="block text-sm font-bold text-gray-700 mb-4">4. Horários Disponíveis</label>
+        <div class="grid grid-cols-4 sm:grid-cols-6 gap-3" id="timeSlots"></div>
+      </div>
+
+      <!-- 5. Dados Pessoais -->
+      <div class="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
+        <label class="block text-sm font-bold text-gray-700 mb-4">5. Seus Dados</label>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <input type="text" id="clientName" required placeholder="Nome completo" class="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--tw-colors-primary)] transition">
+          <input type="tel" id="clientPhone" required placeholder="WhatsApp (Ex: 44999999999)" class="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--tw-colors-primary)] transition">
+        </div>
+      </div>
+
+      <button type="submit" class="w-full bg-[color:var(--tw-colors-primary)] hover:bg-[color:var(--tw-colors-primaryHover)] text-white font-bold py-4 rounded-xl shadow-lg transition flex items-center justify-center gap-2">
+        Confirmar Agendamento
+      </button>
+    </form>
+  </main>
+
+  <footer class="text-center py-6 text-xs text-gray-400 border-t border-gray-200 bg-white">
+    Desenvolvido por Samuel V. • Sistema de Gestão
+  </footer>
+
+  <script>
+    // === CHAVES DO SUPABASE ===
+    const SUPABASE_URL = "SUA_URL_AQUI"; 
+    const SUPABASE_KEY = "SUA_ANON_KEY_AQUI";
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // CONFIGURAÇÕES DO CLIENTE (Edite aqui para cada novo contrato)
+    const services = [
+      { id: 1, name: "Serviço Básico", price: 50, duration: "30 min" },
+      { id: 2, name: "Serviço Completo", price: 90, duration: "1h" }
+    ];
+    const availableHours = ["09:00", "10:00", "11:00", "14:00", "15:00", "16:00", "17:00"];
+
+    let selectedService = services[0];
+    let selectedTime = null;
+    let bookedTimes = [];
+
+    async function init() {
+      document.getElementById('dateSelect').value = new Date().toISOString().split('T')[0];
+      renderServices();
+      await fetchBookedTimes();
+      renderTimeSlots();
+    }
+
+    function renderServices() {
+      document.getElementById('servicesList').innerHTML = services.map(s => `
+        <div onclick="selectService(${s.id})" class="cursor-pointer rounded-xl p-4 border transition ${selectedService.id === s.id ? 'bg-indigo-50 border-[color:var(--tw-colors-primary)] ring-1 ring-[color:var(--tw-colors-primary)]' : 'bg-gray-50 border-gray-200 hover:border-gray-300'}">
+          <div class="flex justify-between items-start">
+            <h4 class="font-bold text-sm text-gray-800">${s.name}</h4>
+            <span class="text-[color:var(--tw-colors-primary)] font-bold text-sm">R$ ${s.price}</span>
+          </div>
+          <p class="text-xs text-gray-500 mt-1">⏱ ${s.duration}</p>
+        </div>
+      `).join('');
+    }
+
+    function selectService(id) {
+      selectedService = services.find(s => s.id === id);
+      renderServices();
+    }
+
+    // Busca horários já ocupados no banco para bloquear na tela
+    async function fetchBookedTimes() {
+      const date = document.getElementById('dateSelect').value;
+      const { data } = await supabaseClient
+        .from('appointments')
+        .select('time')
+        .eq('date', date)
+        .neq('status', 'cancelado');
+      
+      bookedTimes = data ? data.map(a => a.time) : [];
+      renderTimeSlots();
+    }
+
+    document.getElementById('dateSelect').addEventListener('change', fetchBookedTimes);
+
+    function renderTimeSlots() {
+      document.getElementById('timeSlots').innerHTML = availableHours.map(time => {
+        const isBusy = bookedTimes.includes(time);
+        const isSelected = selectedTime === time;
+        return `
+          <button type="button" ${isBusy ? 'disabled' : ''} onclick="selectTime('${time}')"
+            class="py-2.5 rounded-xl text-sm font-semibold border transition ${
+              isBusy ? 'bg-gray-100 border-gray-200 text-gray-400 line-through cursor-not-allowed' :
+              isSelected ? 'bg-[color:var(--tw-colors-primary)] text-white border-[color:var(--tw-colors-primary)] shadow-md' : 'bg-white border-gray-300 text-gray-700 hover:border-[color:var(--tw-colors-primary)]'
+            }">
+            ${time}
+          </button>
+        `;
+      }).join('');
+    }
+
+    function selectTime(time) {
+      selectedTime = time;
+      renderTimeSlots();
+    }
+
+    async function handleBooking(e) {
+      e.preventDefault();
+      if(!selectedTime) return alert("Por favor, selecione um horário.");
+
+      const btn = e.target.querySelector('button[type="submit"]');
+      btn.innerHTML = "Agendando...";
+      btn.disabled = true;
+
+      const newBooking = {
+        client_name: document.getElementById('clientName').value,
+        phone: document.getElementById('clientPhone').value,
+        service: selectedService.name,
+        price: selectedService.price,
+        barber: document.getElementById('professionalSelect').value,
+        date: document.getElementById('dateSelect').value,
+        time: selectedTime,
+        status: 'pendente'
+      };
+
+      const { error } = await supabaseClient.from('appointments').insert([newBooking]);
+
+      if (!error) {
+        alert("Agendamento concluído com sucesso!");
+        e.target.reset();
+        selectedTime = null;
+        await fetchBookedTimes();
+      } else {
+        alert("Erro ao agendar. Tente novamente.");
+      }
+      btn.innerHTML = "Confirmar Agendamento";
+      btn.disabled = false;
+    }
+
+    init();
+  </script>
+</body>
+</html>
