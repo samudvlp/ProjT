@@ -111,12 +111,13 @@
 
       if (error) {
         const errEl = document.getElementById('loginError');
-        errEl.innerText = "Acesso negado. E-mail ou senha inválidos.";
+        errEl.innerText = "Erro do Supabase: " + error.message;
         errEl.classList.remove('hidden');
+        console.error(error); // Joga os detalhes técnicos no painel F12
       } else {
         checkSession();
       }
-    }
+    } 
 
     async function handleLogout() {
       await supabaseClient.auth.signOut();
