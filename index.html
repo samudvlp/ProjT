@@ -58,6 +58,8 @@
           <select id="professionalSelect" required class="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--tw-colors-primary)] transition">
             <option value="Profissional 1">Profissional 1</option>
             <option value="Profissional 2">Profissional 2</option>
+            <option value="Profissional 3">Profissional 3</option>
+            <option value="Profissional 4">Profissional 4</option>
           </select>
         </div>
         <div>
@@ -88,7 +90,7 @@
   </main>
 
   <footer class="text-center py-6 text-xs text-gray-400 border-t border-gray-200 bg-white">
-    Desenvolvido por Samuel Martins. • Sistema de Gestão
+    Desenvolvido por Samuel Martins. • Sistema de Gestão.
   </footer>
 
   <script>
@@ -99,10 +101,12 @@
 
     // CONFIGURAÇÕES DO CLIENTE (Edite aqui para cada novo contrato)
     const services = [
-      { id: 1, name: "Serviço Básico", price: 50, duration: "30 min" },
-      { id: 2, name: "Serviço Completo", price: 90, duration: "1h" }
+      { id: 1, name: "Serviço 1", price: 50, duration: "30 min" },
+      { id: 2, name: "Serviço 2", price: 85, duration: "1h" },
+      { id: 3, name: "Serviço 3", price: 22, duration: "1h" },
+      { id: 4, name: "Serviço 4", price: 96, duration: "1h" }
     ];
-    const availableHours = ["09:00", "10:00", "11:00", "14:00", "15:00", "16:00", "17:00"];
+    const availableHours = ["08:00", "09:00", "10:00", "11:00", "14:00", "15:00", "16:00", "17:00","18:00", "19:00"];
 
     let selectedService = services[0];
     let selectedTime = null;
@@ -154,7 +158,7 @@
         return `
           <button type="button" ${isBusy ? 'disabled' : ''} onclick="selectTime('${time}')"
             class="py-2.5 rounded-xl text-sm font-semibold border transition ${
-              isBusy ? 'bg-gray-100 border-gray-200 text-gray-400 line-through cursor-not-allowed' :
+              isBusy ? 'bg-gray-200 border-red-500 text-gray-400 line-through cursor-not-allowed' :
               isSelected ? 'bg-[color:var(--tw-colors-primary)] text-white border-[color:var(--tw-colors-primary)] shadow-md' : 'bg-white border-gray-300 text-gray-700 hover:border-[color:var(--tw-colors-primary)]'
             }">
             ${time}
